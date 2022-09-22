@@ -1,0 +1,31 @@
+version: "3"
+
+services:
+    movie-catalog:
+        build:
+            context: .
+            dockerfile: ./movie-catalog/Dockerfile
+        container_name: movie-catalog
+        environment:
+            - MONGO_DB=mongodb://mongo-rent:27017/movie
+        ports:
+            - "8081:8081"
+        networks:
+            - observability
+
+    rent-movie:
+        build:
+            context: .
+            dockerfile: ./rent-movie/Dockerfile
+        container_name: rent-movie
+        environment:
+            - MONGO_DB=mongodb://mongo-rent:27017/rent-movie
+            - URL_MOVIE_CATALOG=http://movie-catalog:8081/movie
+        ports:
+            - "8082:8082"
+        networks:
+            - observability
+
+networks:
+    observability:
+        external: true

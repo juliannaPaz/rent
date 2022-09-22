@@ -1,0 +1,16 @@
+server:
+    port: 8081
+
+swagger:
+    title: Rent Movie
+    description: API para aluguel de filmes
+
+springdoc:
+    packagesToScan: com.observability.com.moviecatalog.controller
+
+spring:
+    data:
+        mongodb:
+            uri: ${MONGO_DB:mongodb://localhost:27018/movie}
+    application:
+        name: movie-catalog

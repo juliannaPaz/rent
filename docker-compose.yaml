@@ -1,0 +1,89 @@
+version: "3"
+
+services:
+
+    elasticsearch:
+        image: docker.elastic.co/elasticsearch/elasticsearch:7.13.0
+        container_name: elasticsearch
+        environment:
+            - node.name=elasticsearch
+            - cluster.name=es-docker-cluster
+            - bootstrap.memory_lock=true
+            - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+            - http.cors.enabled=true
+            - http.cors.allow-origin="*"
+            - discovery.type=single-node
+        ulimits:
+            memlock:
+                soft: -1
+                hard: -1
+        volumes:
+            - ./elasticsearch/elasticsearch_data:/usr/share/elasticsearch/data
+        ports:
+            - 9200:9200
+        networks:
+            - observability
+
+    kibana:
+        image: docker.elastic.co/kibana/kibana:7.13.0
+        container_name: kibana
+        ports:
+            - 5601:5601
+        environment:
+            ELASTICSEARCH_URL: http://elasticsearch:9200
+            ELASTICSEARCH_HOSTS: '["http://elasticsearch:9200"]'
+        networks:
+            - observability
+    apm:
+        image: docker.elastic.co/apm/apm-server-oss:7.13.0
+        container_name: apm
+        volumes:
+            - ./elasticsearch/apm/apm-server.yml:/usr/share/apm-server/apm-server.yml
+        ports:
+            - "8200:8200"
+        restart: on-failure
+        networks:
+            - observability
+    mongo-rent:
+        container_name: mongo-rent
+        image: mongo:4.2
+        ports:
+            - "27018:27017"
+        networks:
+            - observability
+
+    prometheus:
+        image: prom/prometheus:latest
+        container_name: prometheus
+        ports:
+            - "9090:9090"
+        command:
+            - --config.file=/etc/prometheus/prometheus.yml
+        volumes:
+            - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+        networks:
+            - observability
+
+    grafana:
+        image: grafana/grafana
+        container_name: grafana
+        ports:
+            - "3000:3000"
+        depends_on:
+            - prometheus
+        networks:
+            - observability
+
+#    filebeat:
+#        entrypoint: "filebeat -e -strict.perms=false"
+#        image: docker.elastic.co/beats/filebeat:8.2.0
+#        container_name: filebeat
+#        volumes:
+#            # add Filebeat config file
+#            - ./elasticsearch/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml
+#        restart: on-failure
+#        networks:
+#            - observability
+networks:
+    observability:
+        external: true

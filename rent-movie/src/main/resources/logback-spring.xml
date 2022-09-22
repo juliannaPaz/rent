@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <property name="LOGS" value="./logs" />
+    <logger name="org.springframework.cloud.sleuth" level="TRACE"/>
+    <logger name="org.springframework.boot.autoconfigure.logging" level="INFO"/>
+    <logger name="org.springframework.cloud.sleuth.log" level="DEBUG"/>
+    <logger name="org.springframework.cloud.sleuth.trace" level="DEBUG"/>
+    <logger name="org.springframework.cloud.sleuth.instrument.rxjava" level="DEBUG"/>
+    <logger name="org.springframework.cloud.sleuth.instrument.reactor" level="TRACE"/>
+
+    <appender name="JSON" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <fieldNames>
+                <version>[ignore]</version>
+                <levelValue>[ignore]</levelValue>
+                <timestamp>[ignore]</timestamp>
+            </fieldNames>
+            <provider class="net.logstash.logback.composite.loggingevent.LoggingEventPatternJsonProvider">
+                <pattern>
+                    {
+                    "timestamp_app": "%d{yyyy-MM-dd HH:mm:ss.SSS}"
+                    }
+                </pattern>
+            </provider>
+        </encoder>
+    </appender>
+
+    <appender name="Console"
+              class="ch.qos.logback.core.ConsoleAppender">
+        <layout class="ch.qos.logback.classic.PatternLayout">
+            <Pattern>
+                %white(%d{ISO8601}) %highlight(%-5level) [%blue(%t)] %yellow(%C{1.}): %msg%n%throwable
+            </Pattern>
+        </layout>
+    </appender>
+
+    <appender name="RollingFile"
+              class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOGS}/spring-boot-logger.log</file>
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <fieldNames>
+                <version>[ignore]</version>
+                <levelValue>[ignore]</levelValue>
+                <timestamp>[ignore]</timestamp>
+            </fieldNames>
+            <provider class="net.logstash.logback.composite.loggingevent.LoggingEventPatternJsonProvider">
+                <pattern>
+                    {
+                    "timestamp_app": "%d{yyyy-MM-dd HH:mm:ss.SSS}"
+                    }
+                </pattern>
+            </provider>
+        </encoder>
+
+        <rollingPolicy
+            class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- rollover daily and when the file reaches 10 MegaBytes -->
+            <fileNamePattern>${LOGS}/archived/spring-boot-logger-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <timeBasedFileNamingAndTriggeringPolicy
+                class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <maxFileSize>10MB</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+        </rollingPolicy>
+    </appender>
+
+    <!-- LOG everything at INFO level -->
+    <root level="info">
+        <appender-ref ref="RollingFile" />
+        <appender-ref ref="Console" />
+    </root>
+
+</configuration>
